@@ -3,20 +3,29 @@ import "./App.css";
 import GridCell from "../GridCell";
 
 class App extends React.Component {
-  state = { currentTile: "red", board: [[], [], [], [], [], [], []] };
+  state = {
+    currentTile: "red",
+    board: [[], [], [], [], [], [], []],
+  };
 
   sendTileDrop = (board, x, y) => {
+    const colLength = 6;
+
+    // check for the full column
     const tile = this.state.currentTile;
+    if (board[x].length === colLength) {
+      return;
+    }
 
     const col = [...board[x], tile];
-    const boardCopy = board.slice();
+    const boardCopy = [...board];
     boardCopy[x] = col;
     this.setState({ board: boardCopy });
     this.setState({
       currentTile: this.state.currentTile === "red" ? "black" : "red",
     });
 
-    this.getWinner(boardCopy, x, y);
+    this.checkGameStatus(boardCopy, x, y);
   };
 
   verticalCheck(board, x, y) {
@@ -25,12 +34,10 @@ class App extends React.Component {
     // down
     for (let j = y - 3; j <= y; j++) {
       if (board[x][j] !== currentTile) {
-        return;
+        return false;
       }
     }
-
-    alert("we have a winner!");
-    this.setState({ currentTile: "red", board: [[], [], [], [], [], [], []] });
+    return true;
   }
 
   horizontalCheck(board, x, y) {
@@ -57,17 +64,14 @@ class App extends React.Component {
     }
 
     if (lastIndex - firstIndex === 3) {
-      alert("we have a winner!");
-      this.setState({
-        currentTile: "red",
-        board: [[], [], [], [], [], [], []],
-      });
+      return true;
     }
+    return false;
   }
 
   diagonalCheck1(board, x, y) {
     const { currentTile } = this.state;
-    const colLength = 5;
+    const colLength = 6;
 
     let firstIndex = x;
     let lastIndex = x;
@@ -93,21 +97,16 @@ class App extends React.Component {
     }
 
     if (Math.abs(lastIndex - firstIndex) === 3) {
-      alert("we have a winner!");
-      this.setState({
-        currentTile: "red",
-        board: [[], [], [], [], [], [], []],
-      });
+      return true;
     }
+    return false;
   }
 
   diagonalCheck2(board, x, y) {
     const { currentTile } = this.state;
     const colLength = 5;
-
     let firstIndex = x;
     let lastIndex = x;
-
     for (let i = x - 1, j = y + 1; i >= 0 && j <= colLength; i--, j++) {
       if (!board[i][j] || board[i][j] !== currentTile) {
         break;
@@ -115,7 +114,6 @@ class App extends React.Component {
         firstIndex = i;
       }
     }
-
     for (let i = x + 1, j = y - 1; i < board.length && j >= 0; i++, j--) {
       if (!board[i][j] || board[i][j] !== currentTile) {
         break;
@@ -123,26 +121,45 @@ class App extends React.Component {
         lastIndex = i;
       }
     }
-
     if (Math.abs(lastIndex - firstIndex) === 3) {
+      return true;
+    }
+    return false;
+  }
+
+  checkBoardForDraw = (board) => {
+    const colLength = 6;
+    for (let row of board) {
+      if (row.length !== colLength) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  checkGameStatus(board, x, y) {
+    if (
+      this.verticalCheck(board, x, y) ||
+      this.horizontalCheck(board, x, y) ||
+      this.diagonalCheck1(board, x, y) ||
+      this.diagonalCheck2(board, x, y)
+    ) {
       alert("we have a winner!");
       this.setState({
         currentTile: "red",
         board: [[], [], [], [], [], [], []],
       });
     }
-  }
 
-  getWinner(board, x, y) {
-    this.verticalCheck(board, x, y);
-    this.horizontalCheck(board, x, y);
-    this.diagonalCheck1(board, x, y);
-    this.diagonalCheck2(board, x, y);
+    // draw
+    if (this.checkBoardForDraw(board)) {
+      alert("it's a draw!");
+    }
   }
 
   render() {
     const { board } = this.state;
-    const cells = [];
+    const boardElem = [];
 
     for (let y = 5; y >= 0; y--) {
       const row = [];
@@ -157,7 +174,7 @@ class App extends React.Component {
           />
         );
       }
-      cells.push(
+      boardElem.push(
         <div key={y} className="row">
           {row}
         </div>
@@ -165,7 +182,7 @@ class App extends React.Component {
     }
     return (
       <div className="App">
-        <div>{cells}</div>
+        <div>{boardElem}</div>
       </div>
     );
   }
