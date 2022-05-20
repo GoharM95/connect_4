@@ -28,103 +28,69 @@ class App extends React.Component {
     this.checkGameStatus(boardCopy, x, y);
   };
 
-  verticalCheck(board, x, y) {
-    const { currentTile } = this.state;
-
-    // down
-    for (let j = y - 3; j <= y; j++) {
-      if (board[x][j] !== currentTile) {
-        return false;
-      }
-    }
-    return true;
-  }
-
-  horizontalCheck(board, x, y) {
-    const { currentTile } = this.state;
-    let firstIndex = x;
-    let lastIndex = x;
-
-    // left
-    for (let i = x - 1; i >= 0; i--) {
-      if (!board[i][y] || board[i][y] !== currentTile) {
-        break;
-      } else {
-        firstIndex = i;
-      }
-    }
-
-    // right
-    for (let j = x + 1; j < board.length; j++) {
-      if (!board[j][y] || board[j][y] !== currentTile) {
-        break;
-      } else {
-        lastIndex = j;
-      }
-    }
-
-    if (lastIndex - firstIndex === 3) {
-      return true;
-    }
-    return false;
-  }
-
-  diagonalCheck1(board, x, y) {
+  checkDirection(board, x, y, dirX, dirY) {
     const { currentTile } = this.state;
     const colLength = 6;
+    const rowLength = 7;
 
-    let firstIndex = x;
-    let lastIndex = x;
+    let firstIndexX = x;
+    let firstIndexY = y;
+
+    let lastIndexX = x;
+    let lastIndexY = y;
 
     for (
-      let i = x + 1, j = y + 1;
-      i < board.length && j <= colLength;
-      i++, j++
+      let i = x + dirX, j = y + dirY;
+      i >= 0 && i < rowLength && j >= 0 && j < colLength;
+      i += dirX, j += dirY
     ) {
       if (!board[i][j] || board[i][j] !== currentTile) {
         break;
       } else {
-        lastIndex = i;
+        firstIndexX = i;
+        firstIndexY = j;
       }
     }
 
-    for (let i = x - 1, j = y - 1; i >= 0 && j >= 0; i--, j--) {
+    for (
+      let i = x - dirX, j = y - dirY;
+      i >= 0 && i < rowLength && j >= 0 && j < colLength;
+      i -= dirX, j -= dirY
+    ) {
       if (!board[i][j] || board[i][j] !== currentTile) {
         break;
       } else {
-        firstIndex = i;
+        lastIndexX = i;
+        lastIndexY = j;
       }
     }
 
-    if (Math.abs(lastIndex - firstIndex) === 3) {
-      return true;
+    if (
+      Math.abs(lastIndexX - firstIndexX) === 3 ||
+      Math.abs(lastIndexY - firstIndexY) === 3
+    ) {
+      alert("we have a winner!");
+      this.setState({
+        currentTile: "red",
+        board: [[], [], [], [], [], [], []],
+      });
     }
-    return false;
+  }
+
+  verticalCheck(board, x, y) {
+    this.checkDirection(board, x, y, 0, 1);
+  }
+
+  horizontalCheck(board, x, y) {
+    this.checkDirection(board, x, y, 1, 0);
+  }
+
+  diagonalCheck1(board, x, y) {
+    this.checkDirection(board, x, y, -1, 1);
   }
 
   diagonalCheck2(board, x, y) {
-    const { currentTile } = this.state;
-    const colLength = 5;
-    let firstIndex = x;
-    let lastIndex = x;
-    for (let i = x - 1, j = y + 1; i >= 0 && j <= colLength; i--, j++) {
-      if (!board[i][j] || board[i][j] !== currentTile) {
-        break;
-      } else {
-        firstIndex = i;
-      }
-    }
-    for (let i = x + 1, j = y - 1; i < board.length && j >= 0; i++, j--) {
-      if (!board[i][j] || board[i][j] !== currentTile) {
-        break;
-      } else {
-        lastIndex = i;
-      }
-    }
-    if (Math.abs(lastIndex - firstIndex) === 3) {
-      return true;
-    }
-    return false;
+    this.checkDirection(board, x, y, 1, 1);
   }
 
   checkBoardForDraw = (board) => {
